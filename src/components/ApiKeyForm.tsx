@@ -38,13 +38,13 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOpenRouterKey, setShowOpenRouterKey] = useState(false);
-  const [showFluxKey, setShowFluxKey] = useState(false);
+  // const [showFluxKey, setShowFluxKey] = useState(false); // Disabled - Flux API key temporarily removed
   const [verificationStatus, setVerificationStatus] = useState<{
     openRouter: 'idle' | 'pass' | 'fail';
     flux: 'idle' | 'pass' | 'fail';
   }>({
     openRouter: 'idle',
-    flux: 'idle'
+    flux: 'idle' // Kept for future use
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,15 +68,16 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({
     setVerificationStatus({ openRouter: 'idle', flux: 'idle' });
 
     try {
-      const result = await verifyApiKeys(formData.openRouterApiKey, formData.fluxApiKey);
-      
+      // Pass empty string for fluxApiKey since it's temporarily disabled
+      const result = await verifyApiKeys(formData.openRouterApiKey, formData.fluxApiKey || '');
+
       setVerificationStatus({
         openRouter: result.openRouterPass,
-        flux: result.fluxPass
+        flux: result.fluxPass // Will be 'fail' but ignored for now
       });
 
-      // Both keys passed verification
-      if (result.openRouterPass === 'pass' && result.fluxPass === 'pass') {
+      // Only OpenRouter key needs to pass verification (Flux temporarily disabled)
+      if (result.openRouterPass === 'pass') {
         await handleSubmit(true);
         onSubmitSuccess();
       } else {
@@ -135,7 +136,7 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({
       <h2 className="text-2xl font-semibold mb-6 text-center text-white">API Keys Submission</h2>
       
       <div className="text-zinc-300 mb-6 text-center">
-        Please enter your details and API keys below. Your API keys will be verified before proceeding.
+        Please enter your details and API key below. Your API key will be verified before proceeding.
       </div>
       
       <form onSubmit={handleVerify} className="space-y-6">
@@ -249,6 +250,7 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({
             )}
           </div>
           
+          {/* Flux API Key - Temporarily disabled, kept for future use
           <div>
             <label htmlFor="fluxApiKey" className="block text-sm font-medium text-zinc-300 mb-1">
               Black Forest Labs API Key
@@ -292,6 +294,7 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({
               <p className="text-red-500 text-sm mt-1">Invalid Black Forest Labs API key</p>
             )}
           </div>
+          */}
         </div>
         
         <div className="flex justify-center pt-4">
@@ -316,16 +319,12 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({
           </button>
         </div>
         
-        {(verificationStatus.openRouter === 'fail' || verificationStatus.flux === 'fail') && (
+        {/* Only show error for OpenRouter since Flux is temporarily disabled */}
+        {verificationStatus.openRouter === 'fail' && (
           <div className="mt-4 p-4 bg-red-900/30 border border-red-800 rounded-md text-sm text-zinc-200">
             <p className="font-medium">Please correct the following issues:</p>
             <ul className="list-disc list-inside mt-2">
-              {verificationStatus.openRouter === 'fail' && (
-                <li>The OpenRouter API key is invalid</li>
-              )}
-              {verificationStatus.flux === 'fail' && (
-                <li>The Black Forest Labs API key is invalid</li>
-              )}
+              <li>The OpenRouter API key is invalid</li>
             </ul>
           </div>
         )}
